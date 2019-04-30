@@ -22,28 +22,54 @@ class ViewController: UIViewController {
     @IBOutlet var progressBar: UIView!
     @IBOutlet weak var progressLabel: UILabel!
     
-    let buttonArray = [DigitalInput(), DigitalInput()]
+    let button0 = DigitalInput()
+    let button1 = DigitalInput()
     let ledArray = [DigitalOutput(), DigitalOutput()]
     
     func attach_handler(sender: Phidget) {
-        do {
-            let hubPort = try sender.getHubPort()
-            if (hubPort == 1) {
+        do{
+            if(try sender.getHubPort() == 1){
+                print("Button 0 Attached")
+            }
+            else if (try sender.getHubPort() == 2){
                 print("Button 1 Attached")
-            }
-            else if (hubPort == 2) {
-                print("Button 2 Attached")
-            }
-            else if (hubPort == 3) {
-                print("Led 3 Attached")
-            }
-            else if (hubPort == 4) {
-                print("Led 4 Atached")
             }
         } catch let err as PhidgetError {
             print("Phidget Error " + err.description)
-        } catch {
+        } catch{
             //catch other errors here
+        }
+    }
+    
+    func state_change_button0(sender: DigitalInput, state: Bool) {
+        if(state == true) {
+            print("Button 0 Pressed")
+            pickedAnswer = true
+            checkAnswer()
+            questionNumber += 1
+            nextQuestion()
+            //if (questionNumber >= 13) {
+             //   return
+            //}
+        }
+        else {
+            print("Button 0 Not Pressed")
+        }
+    }
+    
+    func state_change_button1(sender: DigitalInput, state: Bool) {
+        if(state == true) {
+            print("Button 1 Pressed")
+            pickedAnswer = false
+            checkAnswer()
+            questionNumber += 1
+            nextQuestion()
+            //if (questionNumber >= 13) {
+              //  return
+            //}
+        }
+        else {
+            print("Button 1 Not Pressed")
         }
     }
     
@@ -53,49 +79,7 @@ class ViewController: UIViewController {
             //nextQuestion()
     
     
-    func state_change(sender: DigitalInput, state: Bool) {
-        do {
-            
-        
-            if( state == true) {
-                if (sender === buttonArray[0]) {
-                    print("Button 1 Pressed")
-                    pickedAnswer = true
-                    try ledArray[0].setState(true)
-                    //try checkAnswer()
-                    
-                    
-                } else if (sender === buttonArray[1]) {
-                        print("Button 2 Pressed")
-                        pickedAnswer = false
-                        try ledArray[1].setState(true)
-                        //try checkAnswer()
-                }
-                checkAnswer()
-                questionNumber += 1
-                //updateUI()
-                //nextQuestion()
-                
-            }
-            else {
-                    if (sender === buttonArray[0]) {
-                    print("Button 1 Not Pressed")
-                    try ledArray[0].setState(false)
-                    }
-
-                    else if (sender === buttonArray[1]){
-                    print("Button 2 Not Pressed")
-                    try ledArray[1].setState(false)
-                    }
-                }
-        }
-        catch let err as PhidgetError {
-            print("phidget Error " + err.description)
-        } catch {
-            //catch other errors here
-        }
-        
-    }
+    
     
     func answerPressed() {
 //        do{
@@ -128,29 +112,29 @@ class ViewController: UIViewController {
             try Net.enableServerDiscovery(serverType: .deviceRemote)
             
             //address objects
+            try button0.setDeviceSerialNumber(528025)
+            try button0.setHubPort(1)
+            try button0.setIsHubPortDevice(true)
             
-            
-            for i in 0..<buttonArray.count {
-                try buttonArray[i].setDeviceSerialNumber(528025)
-                try buttonArray[i].setHubPort(i+1)
-                try buttonArray[i].setIsHubPortDevice(true)
-                let _ = buttonArray[i].stateChange.addHandler(state_change)
-                let _ = buttonArray[i].stateChange.addHandler(state_change)
-                let _ = buttonArray[i].attach.addHandler(attach_handler)
-
-                try buttonArray[i].open()
-            }
-
+            try button1.setDeviceSerialNumber(528025)
+            try button1.setHubPort(2)
+            try button1.setIsHubPortDevice(true)
             
             //add attach handlers
-
+            let _ = button0.attach.addHandler(attach_handler)
+            let _ = button1.attach.addHandler(attach_handler)
             
             //add state change handlers
-
-            
-            
+            let _ = button0.stateChange.addHandler(state_change_button0)
+            let _ = button1.stateChange.addHandler(state_change_button1)
             
             //open objects
+            try button0.open()
+            try button1.open()
+            if (questionNumber >= 13) {
+                try button0.close()
+                try button1.close()
+            }
 
             for i in 0..<ledArray.count {
                 try ledArray[i].setDeviceSerialNumber(528025)
@@ -190,34 +174,37 @@ class ViewController: UIViewController {
     
     //update progress bar/label and score label
     func updateUI() {
-      
-        scoreLabel.text = "Score: \(score)"
-        progressLabel.text = "\(questionNumber + 1) / 13 "
+        DispatchQueue.main.async {
+        self.scoreLabel.text = "Score: \(self.score)"
+        self.progressLabel.text = "\(self.questionNumber + 1) / 13 "
         
-        progressBar.frame.size.width = (view.frame.size.width / 13) * CGFloat(questionNumber + 1)
+        self.progressBar.frame.size.width = (self.view.frame.size.width / 13) * CGFloat(self.questionNumber + 1)
         //print(questionNumber)
-        print(progressBar.frame.size.width)
+        print(self.progressBar.frame.size.width)
+    }
     }
     
 
     func nextQuestion() {
         //If the questions aren't over 12, pull up the next one otherwise pull up an alert button
-        if questionNumber <= 12 {
+        DispatchQueue.main.async {
+        if self.questionNumber <= 12 {
             
-            questionLabel.text = allQuestions.list[questionNumber].questionText
+            self.questionLabel.text = self.allQuestions.list[self.questionNumber].questionText
             
-            updateUI()
+            self.updateUI()
             
         }
         else {
             let alert = UIAlertController(title: "End of Quiz", message: "Do you want to start over?", preferredStyle: .alert)
-            
+
             let restartAction = UIAlertAction(title: "Restart", style: .default, handler: { (UIAlertAction) in self.startOver()
                 })
             //Add the restart button to the UIAlertController
             alert.addAction(restartAction)
-            
-            present(alert, animated: true, completion: nil )
+
+            self.present(alert, animated: true, completion: nil )
+        }
         }
     }
     
