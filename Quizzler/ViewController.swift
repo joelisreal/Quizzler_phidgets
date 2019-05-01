@@ -34,6 +34,12 @@ class ViewController: UIViewController {
             else if (try sender.getHubPort() == 2){
                 print("Button 1 Attached")
             }
+            else if (try sender.getHubPort() == 3) {
+                print("Led 0 attached")
+            }
+            else if (try sender.getHubPort() == 4) {
+                print("Led 1 attached")
+            }
         } catch let err as PhidgetError {
             print("Phidget Error " + err.description)
         } catch{
@@ -42,66 +48,49 @@ class ViewController: UIViewController {
     }
     
     func state_change_button0(sender: DigitalInput, state: Bool) {
-        if(state == true) {
-            print("Button 0 Pressed")
-            pickedAnswer = true
-            checkAnswer()
-            questionNumber += 1
-            nextQuestion()
-            //if (questionNumber >= 13) {
-             //   return
-            //}
-        }
-        else {
-            print("Button 0 Not Pressed")
+        do {
+            if(state == true) {
+                print("Button 0 Pressed")
+                pickedAnswer = true
+                checkAnswer()
+                questionNumber += 1
+                nextQuestion()
+            }
+            else {
+                print("Button 0 Not Pressed")
+            }
+        } catch let err as PhidgetError {
+            print("Phidget Error " + err.description)
+        } catch{
+            //catch other errors here
         }
     }
     
     func state_change_button1(sender: DigitalInput, state: Bool) {
-        if(state == true) {
-            print("Button 1 Pressed")
-            pickedAnswer = false
-            checkAnswer()
-            questionNumber += 1
-            nextQuestion()
-            //if (questionNumber >= 13) {
-              //  return
-            //}
-        }
-        else {
-            print("Button 1 Not Pressed")
+        do {
+            if(state == true) {
+                print("Button 1 Pressed")
+                pickedAnswer = false
+                checkAnswer()
+                questionNumber += 1
+                nextQuestion()
+            }
+            else {
+                print("Button 1 Not Pressed")
+            }
+        } catch let err as PhidgetError {
+            print("Phidget Error " + err.description)
+        } catch{
+            //catch other errors here
         }
     }
     
 
-            //checkAnswer()
-            //questionNumber += 1
-            //nextQuestion()
     
     
     
     
-    func answerPressed() {
-//        do{
-//            if button2.stateChange == true {
-//                if button2.state == true {
-//                    pickedAnswer = false
-//                }
-//            }
-//            else if button1.stateChange == true {
-//                if button1.state == true {
-//                    pickedAnswer = true
-//                }
-//            }
-//            checkAnswer()
-//            questionNumber += 1
-//            nextQuestion()
-//        } catch {
-//
-//                }
-//        }
-        
-    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -131,10 +120,7 @@ class ViewController: UIViewController {
             //open objects
             try button0.open()
             try button1.open()
-            if (questionNumber >= 13) {
-                try button0.close()
-                try button1.close()
-            }
+
 
             for i in 0..<ledArray.count {
                 try ledArray[i].setDeviceSerialNumber(528025)
@@ -152,24 +138,6 @@ class ViewController: UIViewController {
         }
     }
 
-//Check if the user picked an answer and pull up the next question
-    @IBAction func answerPressed(_ sender: AnyObject) {
-       // if sender.tag == 1 {
-         //   pickedAnswer = true
-        //}
-        //else if sender.tag == 2 {
-         //   pickedAnswer = false
-        //}
-
-
-        //checkAnswer()
-
-        //questionNumber += 1
-
-        //nextQuestion()
-
-
-    }
 
     
     //update progress bar/label and score label
@@ -196,14 +164,8 @@ class ViewController: UIViewController {
             
         }
         else {
-            let alert = UIAlertController(title: "End of Quiz", message: "Do you want to start over?", preferredStyle: .alert)
 
-            let restartAction = UIAlertAction(title: "Restart", style: .default, handler: { (UIAlertAction) in self.startOver()
-                })
-            //Add the restart button to the UIAlertController
-            alert.addAction(restartAction)
-
-            self.present(alert, animated: true, completion: nil )
+            self.startOver()
         }
         }
     }
